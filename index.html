@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="css">
+:root{
+  --bg:#EEF2FF; --surface:#FFFFFF; --ink:#1A1D3A; --muted:#62668A; --line:#D9DEF5;
+  --track:#DCE2FA; --sun:#FFC93C; --focus:#5B6CFF;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11132A; --surface:#1B1E3D; --ink:#EEF0FF; --muted:#A3A7CC; --line:#2C3060;
+    --track:#262A52; --sun:#FFD25E; --focus:#8E9BFF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11132A; --surface:#1B1E3D; --ink:#EEF0FF; --muted:#A3A7CC; --line:#2C3060;
+  --track:#262A52; --sun:#FFD25E; --focus:#8E9BFF; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+img{max-width:100%}
+
+.wrap{max-width:880px;margin:0 auto;padding:40px 20px 64px}
+
+/* header */
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+h1{font:800 clamp(40px,8vw,68px)/.95 var(--display);letter-spacing:-.03em;margin:0}
+h1[contenteditable="true"]{cursor:text}
+h1[contenteditable="true"]:hover{text-decoration:underline dotted var(--muted) 2px;text-underline-offset:8px}
+.status{font-size:14px;color:var(--muted);min-height:21px}
+
+/* goal meter */
+.meter{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:20px 20px 16px;margin-bottom:28px}
+.meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.meter-count{font:800 44px/1 var(--display);letter-spacing:-.02em}
+.meter-count small{font:600 18px var(--display);color:var(--muted);letter-spacing:0;margin-left:4px}
+.meter-note{font-size:15px;color:var(--muted);text-align:right}
+.goal-input{width:4.2em;padding:2px 6px;border:2px solid var(--line);border-radius:8px;background:var(--bg);font-weight:600;text-align:center}
+.bar{position:relative;height:34px;border-radius:17px;background:var(--track);overflow:hidden;display:flex}
+.seg{height:100%;transition:width .5s cubic-bezier(.3,1.3,.5,1);border-right:2px solid var(--surface)}
+.seg:last-child{border-right:0}
+.ticks{position:absolute;inset:0;display:flex;pointer-events:none}
+.ticks span{flex:1;border-right:2px dashed color-mix(in srgb,var(--surface) 55%,transparent)}
+.ticks span:last-child{border-right:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:14px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:0}
+.meter.done{border-color:var(--sun);box-shadow:0 0 0 4px color-mix(in srgb,var(--sun) 35%,transparent)}
+
+/* board */
+.board{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:44px 48px minmax(90px,170px) 1fr auto auto;align-items:center;gap:14px;
+  background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:12px 16px;border-left:8px solid var(--c)}
+.rank{font:800 26px/1 var(--display);color:var(--muted);text-align:center}
+.row.top .rank{color:var(--ink)}
+.medal{font-size:26px;line-height:1}
+.face{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:28px;overflow:hidden;
+  background:color-mix(in srgb,var(--c) 18%,var(--surface));border:3px solid var(--c)}
+.face img{width:100%;height:100%;object-fit:cover}
+.name{font:700 20px/1.2 var(--display);overflow-wrap:anywhere;margin:0}
+.trail{display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:26px}
+.tok{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:15px;overflow:hidden;
+  background:color-mix(in srgb,var(--c) 14%,var(--surface));box-shadow:0 0 0 2px var(--c)}
+.tok img{width:100%;height:100%;object-fit:cover}
+.tok.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.pts{display:flex;align-items:center;gap:8px}
+.ctrl{display:flex;align-items:center;gap:6px}
+.score{font:800 34px/1 var(--display);min-width:2ch;text-align:right;letter-spacing:-.02em}
+.score small{display:block;font:500 12px var(--body);color:var(--muted);text-align:right;letter-spacing:0}
+
+.btn{border:2px solid var(--line);background:var(--bg);border-radius:12px;min-width:38px;height:38px;padding:0 10px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--c,var(--focus))}
+.btn.plus{background:var(--c);border-color:var(--c);color:#fff;font-size:20px}
+.btn.minus{font-size:20px}
+.btn.more{font-size:18px;letter-spacing:1px}
+
+.edit{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;padding-top:12px;border-top:2px dashed var(--line)}
+.edit label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.edit input[type=text]{padding:6px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);width:11em}
+.edit input.emoji{width:3.2em;text-align:center;font-size:18px}
+.swatches{display:flex;gap:6px}
+.sw{width:24px;height:24px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{border-color:var(--ink)}
+.danger{color:#D23B5A;border-color:color-mix(in srgb,#D23B5A 40%,var(--line))}
+
+.add{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+.add input{flex:1;min-width:180px;padding:10px 14px;border:2px dashed var(--line);border-radius:14px;background:transparent}
+.empty{padding:36px 20px;text-align:center;color:var(--muted);border:2px dashed var(--line);border-radius:18px}
+
+@media (max-width:640px){
+  .wrap{padding:28px 14px 48px}
+  .row{grid-template-columns:34px 44px 1fr auto;gap:10px;padding:12px}
+  .ctrl{grid-column:2/-1;grid-row:3}
+  .face{width:44px;height:44px}
+  .trail{grid-column:2/-1;grid-row:2}
+  .rank{font-size:22px}
+  .score{font-size:28px}
+}
+@media (prefers-reduced-motion: reduce){.seg{transition:none}.tok.pop{animation:none}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="application/json" id="state">{"title":"Leaderboard","goal":100,"players":[{"id":"p1","name":"Player One","avatar":{"type":"emoji","value":"🦊"},"color":"#FF7A45","points":12},{"id":"p2","name":"Player Two","avatar":{"type":"emoji","value":"🐸"},"color":"#22B8A0","points":9},{"id":"p3","name":"Player Three","avatar":{"type":"emoji","value":"🐧"},"color":"#5B6CFF","points":7},{"id":"p4","name":"Player Four","avatar":{"type":"emoji","value":"🐱"},"color":"#FF5C93","points":4}]}</script>
+<script id="app">
+(function(){
+  const COLORS=["#FF7A45","#22B8A0","#5B6CFF","#FF5C93","#F2A900","#8E5BFF","#2FA7E8","#5CB82E"];
+  const MEDALS=["🥇","🥈","🥉"];
+  let state=JSON.parse(document.getElementById("state").textContent);
+  let canEdit=false, art=null, openId=null, saveTimer=null, lastBump=null;
+  const $=(t,cls,txt)=>{const e=document.createElement(t);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+
+  function avatarNode(a,cls){
+    const n=$("span",cls);
+    if(a&&a.type==="img"){const i=new Image();i.alt="";i.src=a.value;n.append(i);}
+    else n.textContent=(a&&a.value)||"⭐";
+    return n;
+  }
+
+  function render(){
+    document.title=state.title||"Leaderboard";
+    const root=document.getElementById("root");
+    root.replaceChildren();
+    const wrap=$("main","wrap");
+
+    // header
+    const head=$("div","head");
+    const h1=$("h1",null,state.title||"Leaderboard");
+    if(canEdit){
+      h1.contentEditable="true";h1.spellcheck=false;h1.title="Click to rename";
+      h1.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();h1.blur();}});
+      h1.addEventListener("blur",()=>{const v=h1.textContent.trim().slice(0,60)||"Leaderboard";if(v!==state.title){state.title=v;change();}});
+    }
+    const status=$("div","status");status.id="status";status.setAttribute("aria-live","polite");
+    head.append(h1,status);
+
+    // meter
+    const total=state.players.reduce((s,p)=>s+Math.max(0,p.points),0);
+    const goal=Math.max(1,state.goal||100);
+    const meter=$("section","meter"+(total>=goal?" done":""));
+    meter.setAttribute("aria-label","Team goal");
+    const top=$("div","meter-top");
+    const count=$("div","meter-count",String(total));
+    const sm=$("small");sm.textContent="/ "+goal;count.append(sm);
+    const note=$("div","meter-note");
+    if(total>=goal) note.textContent="Goal reached! 🎉";
+    else note.textContent=(goal-total)+" points to go";
+    if(canEdit){
+      const lab=$("label");lab.style.display="block";lab.style.marginTop="4px";
+      lab.append(document.createTextNode("Goal "));
+      const gi=$("input","goal-input");gi.type="number";gi.min="1";gi.value=goal;gi.setAttribute("aria-label","Goal");
+      gi.addEventListener("change",()=>{const v=Math.max(1,Math.min(100000,parseInt(gi.value,10)||100));state.goal=v;change();});
+      lab.append(gi);note.append(lab);
+    }
+    top.append(count,note);
+    const bar=$("div","bar");
+    bar.setAttribute("role","progressbar");bar.setAttribute("aria-valuemin","0");
+    bar.setAttribute("aria-valuemax",String(goal));bar.setAttribute("aria-valuenow",String(Math.min(total,goal)));
+    const scale=Math.max(total,goal);
+    [...state.players].sort((a,b)=>b.points-a.points).forEach(p=>{
+      if(p.points<=0)return;
+      const s=$("div","seg");s.style.width=(p.points/scale*100)+"%";s.style.background=p.color;s.title=p.name+": "+p.points;
+      bar.append(s);
+    });
+    const ticks=$("div","ticks");for(let i=0;i<10;i++)ticks.append($("span"));bar.append(ticks);
+    const legend=$("div","legend");
+    state.players.forEach(p=>{const d=$("span");const i=$("i");i.style.background=p.color;d.append(i,document.createTextNode(p.name+" "+p.points));legend.append(d);});
+    meter.append(top,bar,legend);
+
+    // board
+    const list=$("ol","board");
+    const sorted=[...state.players].sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name));
+    let rank=0,prev=null;
+    sorted.forEach((p,i)=>{
+      if(p.points!==prev){rank=i+1;prev=p.points;}
+      const li=$("li","row"+(rank<=3&&p.points>0?" top":""));li.style.setProperty("--c",p.color);
+      const r=$("div","rank");
+      if(rank<=3&&p.points>0){const m=$("span","medal",MEDALS[rank-1]);m.setAttribute("aria-label","Rank "+rank);r.append(m);}
+      else r.textContent=rank;
+      const face=avatarNode(p.avatar,"face");
+      const nm=$("p","name",p.name);
+      const trail=$("div","trail");trail.setAttribute("aria-label",p.points+" points");
+      const shown=Math.max(0,Math.min(p.points,300));
+      for(let k=0;k<shown;k++){
+        const t=avatarNode(p.avatar,"tok");
+        if(lastBump&&lastBump.id===p.id&&k>=lastBump.from)t.classList.add("pop");
+        trail.append(t);
+      }
+      const pts=$("div","pts");const ctrl=$("div","ctrl");
+      if(canEdit){
+        const minus=$("button","btn minus","−");minus.setAttribute("aria-label","Remove a point from "+p.name);
+        minus.onclick=()=>bump(p.id,-1);
+        ctrl.append(minus);
+      }
+      const sc=$("div","score",String(p.points));const lbl=$("small",null,p.points===1?"point":"points");sc.append(lbl);
+      pts.append(sc);
+      if(canEdit){
+        const plus=$("button","btn plus","+");plus.setAttribute("aria-label","Add a point for "+p.name);
+        plus.onclick=()=>bump(p.id,1);
+        const more=$("button","btn more","⋯");more.setAttribute("aria-label","Edit "+p.name);
+        more.setAttribute("aria-expanded",String(openId===p.id));
+        more.onclick=()=>{openId=openId===p.id?null:p.id;render();};
+        ctrl.append(plus,more);
+      }
+      li.append(r,face,nm,trail,pts);if(canEdit)li.append(ctrl);
+      if(canEdit&&openId===p.id) li.append(editPanel(p));
+      list.append(li);
+    });
+
+    wrap.append(head,meter);
+    if(!state.players.length){
+      wrap.append($("div","empty",canEdit?"No players yet. Add the first one below.":"No players yet."));
+    } else wrap.append(list);
+
+    if(canEdit){
+      const add=$("div","add");
+      const inp=$("input");inp.type="text";inp.placeholder="New player name";inp.maxLength=40;inp.setAttribute("aria-label","New player name");
+      const b=$("button","btn","Add player");b.style.setProperty("--c","var(--focus)");
+      const go=()=>{const v=inp.value.trim();if(!v)return;
+        const used=state.players.map(p=>p.color);
+        const color=COLORS.find(c=>!used.includes(c))||COLORS[state.players.length%COLORS.length];
+        const faces=["🦊","🐸","🐧","🐱","🐼","🦁","🐙","🦄","🐝","🐢","🦖","🐨"];
+        const face=faces[state.players.length%faces.length];
+        state.players.push({id:"p"+Date.now().toString(36),name:v,avatar:{type:"emoji",value:face},color,points:0});
+        change();};
+      b.onclick=go;inp.addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+      add.append(inp,b);wrap.append(add);
+    }
+    root.append(wrap);
+    lastBump=null;
+  }
+
+  function editPanel(p){
+    const d=$("div","edit");
+    const l1=$("label",null,"Name");const n=$("input");n.type="text";n.value=p.name;n.maxLength=40;
+    n.addEventListener("change",()=>{const v=n.value.trim();if(v){p.name=v;change();}});l1.append(n);
+    const l2=$("label",null,"Emoji");const e=$("input","emoji");e.type="text";e.maxLength=8;
+    e.value=p.avatar.type==="emoji"?p.avatar.value:"";
+    e.addEventListener("change",()=>{const v=e.value.trim();if(v){p.avatar={type:"emoji",value:v};change();}});l2.append(e);
+    const l3=$("label",null,"or photo");const f=$("input");f.type="file";f.accept="image/*";f.style.maxWidth="190px";
+    f.addEventListener("change",async()=>{const file=f.files&&f.files[0];if(!file)return;
+      try{p.avatar={type:"img",value:await shrink(file)};change();}catch(err){setStatus("That image couldn't be read. Try a JPG or PNG.");}});
+    l3.append(f);
+    const sw=$("div","swatches");sw.setAttribute("role","group");sw.setAttribute("aria-label","Color");
+    COLORS.forEach(c=>{const s=$("button","sw");s.style.background=c;s.setAttribute("aria-label","Color "+c);
+      s.setAttribute("aria-pressed",String(p.color===c));s.onclick=()=>{p.color=c;change();};sw.append(s);});
+    const del=$("button","btn danger","Remove player");
+    del.onclick=()=>{if(confirm("Remove "+p.name+" from the board?")){state.players=state.players.filter(x=>x.id!==p.id);openId=null;change();}};
+    d.append(l1,l2,l3,sw,del);
+    return d;
+  }
+
+  async function shrink(file){
+    const bmp=await createImageBitmap(file);
+    const S=96,c=document.createElement("canvas");c.width=c.height=S;
+    const k=Math.min(bmp.width,bmp.height),sx=(bmp.width-k)/2,sy=(bmp.height-k)/2;
+    c.getContext("2d").drawImage(bmp,sx,sy,k,k,0,0,S,S);
+    let url=c.toDataURL("image/webp",0.8);
+    if(!url.startsWith("data:image/webp"))url=c.toDataURL("image/jpeg",0.8);
+    return url;
+  }
+
+  function bump(id,d){
+    const p=state.players.find(x=>x.id===id);if(!p)return;
+    const from=p.points;p.points=Math.max(0,p.points+d);
+    if(p.points===from)return;
+    if(d>0)lastBump={id,from};
+    change();
+  }
+
+  function setStatus(t){const s=document.getElementById("status");if(s)s.textContent=t;}
+
+  function change(){
+    try{sessionStorage.setItem("lb-pending",JSON.stringify(state));}catch(e){}
+    render();setStatus("Saving…");
+    clearTimeout(saveTimer);saveTimer=setTimeout(save,1600);
+  }
+
+  function buildHTML(){
+    const json=JSON.stringify(state).replace(/</g,"\\u003c");
+    const css=document.getElementById("css").textContent;
+    const app=document.getElementById("app").textContent;
+    const head=document.querySelector('link[href*="fonts.googleapis.com/css2"]').getAttribute("href");
+    return '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'+
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'+
+      '<title>'+esc(state.title||"Leaderboard")+'</title>\n'+
+      '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'+
+      '<link href="'+esc(head)+'" rel="stylesheet">\n<style id="css">'+css+'</style>\n</head>\n<body>\n'+
+      '<script type="application/json" id="state">'+json+'<\/script>\n'+
+      '<div id="root"></div>\n'+
+      '<script id="app">'+app+'<\/script>\n</body>\n</html>\n';
+  }
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+
+  async function save(){
+    if(!art){setStatus("Saving isn't available here.");return;}
+    try{
+      await art.publish(buildHTML());
+      try{sessionStorage.removeItem("lb-pending");}catch(e){}
+      setStatus("Saved");
+    }catch(err){
+      const code=err&&err.code;
+      if(code==="conflict"){setStatus("Someone else just saved. Loading their version…");try{sessionStorage.removeItem("lb-pending");}catch(e){}}
+      else if(code==="not_writer"||code==="not_granted"||code==="consent_required"||code==="capability_disabled"||code==="not_declared"){
+        canEdit=false;render();setStatus("This board is view-only for you.");}
+      else if(code==="rate_limited"){setStatus("Saving too often. Retrying shortly…");saveTimer=setTimeout(save,8000);}
+      else if(code==="too_large"){setStatus("The board is too large to save. Remove a photo or two.");}
+      else{setStatus("Couldn't save. Retrying…");saveTimer=setTimeout(save,3000+Math.random()*2000);}
+    }
+  }
+
+  function start(){
+    render();
+    if(!window.claude||typeof window.claude.use!=="function")return;
+    Promise.all([window.claude.use("artifact"),window.claude.use("user")]).then(async([a,u])=>{
+      art=a;
+      if(!a||!u)return;
+      let ok=false;try{ok=await u.canEdit();}catch(e){}
+      if(!ok)return;
+      canEdit=true;render();
+    });
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+})();
+</script>
+</body>
+</html>
