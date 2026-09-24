@@ -25,7 +25,11 @@ A single self-contained `index.html`: a team leaderboard with a shared goal mete
 ```json
 {
   "title": "Leaderboard",
+  "subtitle": "One-line description of the challenge",
   "goal": 100,
+  "unit": { "one": "nuotrauka", "few": "nuotraukos", "many": "nuotraukų" },
+  "month": { "label": "Rugsėjis – „Startas\u201c 🚩",
+             "task": "📸 Nufotografuok bažnyčios duris / įėjimą." },
   "players": [
     { "id": "p1", "name": "Player One",
       "avatar": { "type": "emoji", "value": "🦊" },
@@ -36,6 +40,11 @@ A single self-contained `index.html`: a team leaderboard with a shared goal mete
 ```
 
 - `id` must be unique. `points` are integers >= 0.
+- `subtitle` is optional; rendered as a tagline under the `h1`.
+- `month` is optional - the current month's task, shown as a dashed card above the goal
+  meter. Either `label` or `task` may be omitted. Update it when the month changes.
+- `unit` names the thing being counted, in Lithuanian plural forms (1 / 2-9 / 0, 10-19).
+  Optional - defaults to `point` / `points`.
 - `avatar` is either `{ "type": "emoji", "value": "🦊" }` or
   `{ "type": "img", "value": "<URL, repo path, or data: URI>" }`.
 - Photos may be a relative repo path (`photos/tomas.jpg`) or a small `data:` URI
@@ -45,12 +54,14 @@ A single self-contained `index.html`: a team leaderboard with a shared goal mete
 
 ## What the page renders
 
-1. **Title** (`h1`), also used as `document.title`.
+1. **Title** (`h1`), also used as `document.title`, with the optional `subtitle` below it.
+   Then the optional `month` card (label + task).
 2. **Goal meter** — total of all points vs `goal`, as a progress bar split into segments
    colored per player (largest first), ticks every 10%, and a legend. Shows
-   "N points to go", or "Goal reached! 🎉" with a gold outline once total >= goal.
+   "Liko N <unit>", or "Tikslas pasiektas! 🎉" with a gold outline once total >= goal.
 3. **Leaderboard**, sorted by points descending (ties broken by name): rank
-   (🥇🥈🥉 for the top three, ties share a rank), avatar, name, a "trail" of one small
+   (🥇🥈🥉 for the top three rows by position - ties and zero scores still get medals;
+   rows below share a rank number on ties), avatar, name, a "trail" of one small
    avatar token per point (capped at `TRAIL_CAP` = 300), and the score.
    Responsive: below 640px the trail wraps onto its own row.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Leaderboard</title>
+<title>PK 2026-2027 iššūkis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
@@ -38,8 +38,15 @@ img{max-width:100%}
 .wrap{max-width:880px;margin:0 auto;padding:40px 20px 64px}
 
 /* header */
-.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.head{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:22px}
 h1{font:800 clamp(40px,8vw,68px)/.95 var(--display);letter-spacing:-.03em;margin:0}
+.tagline{margin:0;max-width:44ch;font-size:clamp(16px,2.2vw,19px);line-height:1.45;color:var(--muted)}
+
+/* this month's task */
+.month{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 7px;margin:0 0 24px;
+  padding:12px 16px;border-radius:14px;background:var(--surface);border:2px dashed var(--line)}
+.month b{font:700 15px var(--display);letter-spacing:-.01em;color:var(--ink)}
+.month span{font-size:15px;color:var(--muted)}
 
 /* goal meter */
 .meter{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:20px 20px 16px;margin-bottom:28px}
@@ -91,13 +98,21 @@ h1{font:800 clamp(40px,8vw,68px)/.95 var(--display);letter-spacing:-.03em;margin
 </head>
 <body>
 <div id="root"></div>
-<script type="application/json" id="state">{"title":"Leaderboard","goal":100,"players":[{"id":"p1","name":"Player One","avatar":{"type":"emoji","value":"🦊"},"color":"#FF7A45","points":12},{"id":"p2","name":"Player Two","avatar":{"type":"emoji","value":"🐸"},"color":"#22B8A0","points":9},{"id":"p3","name":"Player Three","avatar":{"type":"emoji","value":"🐧"},"color":"#5B6CFF","points":7},{"id":"p4","name":"Player Four","avatar":{"type":"emoji","value":"🐱"},"color":"#FF5C93","points":4}]}</script>
+<script type="application/json" id="state">{"title":"PK 2026-2027 iššūkis","subtitle":"Sekmadieniais bažnyčioje nufotografuoti 400 nuotraukų.","month":{"label":"Rugsėjis – „Startas“ 🚩","task":"📸 Nufotografuok bažnyčios duris 🚪 / įėjimą."},"goal":400,"unit":{"one":"nuotrauka","few":"nuotraukos","many":"nuotraukų"},"players":[{"id":"p1","name":"Paauglys 1","avatar":{"type":"emoji","value":"🦊"},"color":"#FF7A45","points":0},{"id":"p2","name":"Paauglys 2","avatar":{"type":"emoji","value":"🐸"},"color":"#22B8A0","points":0},{"id":"p3","name":"Paauglys 3","avatar":{"type":"emoji","value":"🐧"},"color":"#5B6CFF","points":0}]}</script>
 <script id="app">
 (function(){
   const MEDALS=["🥇","🥈","🥉"];
   const TRAIL_CAP=300;
   const state=JSON.parse(document.getElementById("state").textContent);
   const $=(t,cls,txt)=>{const e=document.createElement(t);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
+  const UNIT=Object.assign({one:"point",few:"points",many:"points"},state.unit||{});
+  // Lithuanian plural: 1/21/31… one, 2-9/22-29… few, 0/10-19/x0 many
+  function unit(n){
+    const d=n%10,h=n%100;
+    if(d===1&&h!==11)return UNIT.one;
+    if(d>=2&&d<=9&&!(h>=11&&h<=19))return UNIT.few;
+    return UNIT.many;
+  }
 
   function avatarNode(a,cls){
     const n=$("span",cls);
@@ -115,6 +130,7 @@ h1{font:800 clamp(40px,8vw,68px)/.95 var(--display);letter-spacing:-.03em;margin
     // header
     const head=$("div","head");
     head.append($("h1",null,state.title||"Leaderboard"));
+    if(state.subtitle)head.append($("p","tagline",state.subtitle));
 
     // meter
     const players=Array.isArray(state.players)?state.players:[];
@@ -125,7 +141,7 @@ h1{font:800 clamp(40px,8vw,68px)/.95 var(--display);letter-spacing:-.03em;margin
     const top=$("div","meter-top");
     const count=$("div","meter-count",String(total));
     const sm=$("small");sm.textContent="/ "+goal;count.append(sm);
-    const note=$("div","meter-note",total>=goal?"Goal reached! 🎉":(goal-total)+" points to go");
+    const note=$("div","meter-note",total>=goal?"Tikslas pasiektas! 🎉":"Liko "+(goal-total)+" "+unit(goal-total));
     top.append(count,note);
     const bar=$("div","bar");
     bar.setAttribute("role","progressbar");bar.setAttribute("aria-valuemin","0");
@@ -147,23 +163,34 @@ h1{font:800 clamp(40px,8vw,68px)/.95 var(--display);letter-spacing:-.03em;margin
     let rank=0,prev=null;
     sorted.forEach((p,i)=>{
       if(p.points!==prev){rank=i+1;prev=p.points;}
-      const li=$("li","row"+(rank<=3&&p.points>0?" top":""));li.style.setProperty("--c",p.color);
+      const li=$("li","row"+(i<3?" top":""));li.style.setProperty("--c",p.color);
       const r=$("div","rank");
-      if(rank<=3&&p.points>0){const m=$("span","medal",MEDALS[rank-1]);m.setAttribute("aria-label","Rank "+rank);r.append(m);}
+      if(i<3){const m=$("span","medal",MEDALS[i]);m.setAttribute("aria-label","Vieta "+(i+1));r.append(m);}
       else r.textContent=rank;
       const face=avatarNode(p.avatar,"face");
       const nm=$("p","name",p.name);
-      const trail=$("div","trail");trail.setAttribute("aria-label",p.points+" points");
+      const trail=$("div","trail");trail.setAttribute("aria-label",p.points+" "+unit(p.points));
       const shown=Math.max(0,Math.min(p.points,TRAIL_CAP));
       for(let k=0;k<shown;k++)trail.append(avatarNode(p.avatar,"tok"));
       const pts=$("div","pts");
-      const sc=$("div","score",String(p.points));sc.append($("small",null,p.points===1?"point":"points"));
+      const sc=$("div","score",String(p.points));sc.append($("small",null,unit(p.points)));
       pts.append(sc);
       li.append(r,face,nm,trail,pts);
       list.append(li);
     });
 
-    wrap.append(head,meter);
+    // this month
+    let month=null;
+    if(state.month&&(state.month.label||state.month.task)){
+      month=$("section","month");
+      month.setAttribute("aria-label","Šio mėnesio užduotis");
+      if(state.month.label)month.append($("b",null,state.month.label));
+      if(state.month.task)month.append($("span",null,state.month.task));
+    }
+
+    wrap.append(head);
+    if(month)wrap.append(month);
+    wrap.append(meter);
     wrap.append(players.length?list:$("div","empty","No players yet."));
     root.append(wrap);
   }
